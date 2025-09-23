@@ -1,20 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Hello, World!</title>
-	</head>
-	<body>
-		<h1 id="heading"></h1>
-		<p>This page comes from a static asset stored at `public/index.html` as configured in `wrangler.jsonc`.</p>
-		<script>
-			fetch('/message')
-				.then((resp) => resp.text())
-				.then((text) => {
-					const h1 = document.getElementById('heading');
-					h1.textContent = text;
-				});
-		</script>
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hello, World!</title>
+  </head>
+  <body>
+    <button id="start-btn">開始</button>
+    <button id="stop-btn">終了</button>
+
+    <script>
+      let socket = null;
+      let heartBeatInterval = null;
+
+      // 開始ボタン押下
+      document.getElementById('start-btn').addEventListener('click', () => {
+        if (socket && socket.readyState !== WebSocket.CLOSED) {
+          console.log("A connection is already open or connecting.");
+          return;
+        }
+
+        console.log("Starting WebSocket connection...");
+        socket = new WebSocket("/websocket");
+
+        socket.addEventListener("open", (event) => {
+          console.log("Connection opened.");
+          socket.send("Hello Server!");
+
+          // Start heartbeat
+          heartBeatInterval = setInterval(() => {
+            if (socket.readyState === WebSocket.OPEN) {
+              socket.send("Ping");
+            }
+          }, 1000);
+        });
+
+        socket.addEventListener("message", (event) => {
+          console.log("Message from server: ", event.data);
+        });
+
+        socket.addEventListener("close", (event) => {
+          console.log(`Connection closed. Code: ${event.code}, Reason: ${event.reason}`);
+          // Stop heartbeat
+          if (heartBeatInterval) {
+            clearInterval(heartBeatInterval);
+            heartBeatInterval = null;
+          }
+          socket = null; // Clear the socket
+        });
+
+        socket.addEventListener("error", (event) => {
+          console.error("WebSocket Error:", event);
+        });
+      });
+
+      // 終了ボタン押下
+      document.getElementById('stop-btn').addEventListener('click', () => {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+          console.log("No active connection to close.");
+          return;
+        }
+
+        console.log("Closing connection...");
+        socket.close(1000, "User clicked stop button.");
+      });
+    </script>
+  </body>
 </html>
