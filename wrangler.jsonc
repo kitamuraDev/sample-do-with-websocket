@@ -9,10 +9,19 @@
 	"compatibility_date": "2025-09-21",
 	"migrations": [
 		{
+			"tag": "v1",
 			"new_sqlite_classes": [
-				"MyDurableObject"
-			],
-			"tag": "v1"
+				"OumuGaeshi"
+			]
+		},
+		{
+			"tag": "v2",
+			"renamed_classes": [
+				{
+					"from": "MyDurableObject",
+					"to": "OumuGaeshi"
+				}
+			]
 		}
 	],
 	"assets": {
@@ -22,8 +31,8 @@
 	"durable_objects": {
 		"bindings": [
 			{
-				"class_name": "MyDurableObject",
-				"name": "MY_DURABLE_OBJECT"
+				"class_name": "OumuGaeshi",
+				"name": "OUMU_GAESHI"
 			}
 		]
 	},

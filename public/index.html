@@ -4,65 +4,68 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hello, World!</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+      }
+      .container {
+        text-align: center;
+        background-color: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      p {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        color: #333;
+      }
+      input {
+        padding: 10px 5px;
+        font-size: 1rem;
+        width: 80%;
+        max-width: 300px;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        background-color: transparent;
+        transition: border-bottom-color 0.3s, border-bottom-width 0.3s;
+      }
+      input:focus {
+        outline: none;
+        border-bottom-color: #3f51b5; /* Material Design blue */
+        border-bottom-width: 2px;
+      }
+    </style>
   </head>
   <body>
-    <button id="start-btn">開始</button>
-    <button id="stop-btn">終了</button>
+    <div class="container">
+      <p id="message"></p>
+      <input type="text" id="input" />
+    </div>
 
     <script>
-      let socket = null;
-      let heartBeatInterval = null;
+      const message = document.getElementById("message");
+      const input = document.getElementById("input");
 
-      // 開始ボタン押下
-      document.getElementById('start-btn').addEventListener('click', () => {
-        if (socket && socket.readyState !== WebSocket.CLOSED) {
-          console.log("A connection is already open or connecting.");
-          return;
-        }
+      let wsClient = new WebSocket("ws://localhost:8787/ws");
 
-        console.log("Starting WebSocket connection...");
-        socket = new WebSocket("/websocket");
-
-        socket.addEventListener("open", (event) => {
-          console.log("Connection opened.");
-          socket.send("Hello Server!");
-
-          // Start heartbeat
-          heartBeatInterval = setInterval(() => {
-            if (socket.readyState === WebSocket.OPEN) {
-              socket.send("Ping");
-            }
-          }, 1000);
-        });
-
-        socket.addEventListener("message", (event) => {
-          console.log("Message from server: ", event.data);
-        });
-
-        socket.addEventListener("close", (event) => {
-          console.log(`Connection closed. Code: ${event.code}, Reason: ${event.reason}`);
-          // Stop heartbeat
-          if (heartBeatInterval) {
-            clearInterval(heartBeatInterval);
-            heartBeatInterval = null;
-          }
-          socket = null; // Clear the socket
-        });
-
-        socket.addEventListener("error", (event) => {
-          console.error("WebSocket Error:", event);
-        });
+      wsClient.addEventListener("open", (event) => {
+        console.log(event)
       });
 
-      // 終了ボタン押下
-      document.getElementById('stop-btn').addEventListener('click', () => {
-        if (!socket || socket.readyState !== WebSocket.OPEN) {
-          console.log("No active connection to close.");
-          return;
-        }
+      wsClient.addEventListener("message", (event) => {
+        message.textContent = event.data;
+      });
 
-        console.log("Closing connection...");
-        socket.close(1000, "User clicked stop button.");
+      // 入力する度にwebsocketサーバーに送信
+      input.addEventListener("input", (event) => {
+        wsClient.send(event.target.value);
       });
     </script>
   </body>

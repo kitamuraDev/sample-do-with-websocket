@@ -1,11 +1,13 @@
 import { DurableObject } from "cloudflare:workers";
 
-export class MyDurableObject extends DurableObject {
+export class OumuGaeshi extends DurableObject {
   async fetch(request: Request): Promise<Response> {
     const websocketPair = new WebSocketPair();
     const [client, server] = Object.values(websocketPair);
 
     this.ctx.acceptWebSocket(server);
+    await this.broadcast('connected');
+
     return new Response(null, {
       status: 101,
       webSocket: client,
@@ -13,17 +15,28 @@ export class MyDurableObject extends DurableObject {
   }
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
-    ws.send(`[Durable Object] message: ${message}, connections: ${this.ctx.getWebSockets().length}`);
+    await this.broadcast(message);
   }
 
   async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
-    console.log(`WebSocket closed: code=${code}, reason=${reason}, wasClean=${wasClean}`);
+    await this.broadcast('disconnected');
+  }
+
+  /**
+   * 接続しているすべてのクライアントにメッセージをブロードキャストする
+   * @param message 送信するメッセージ
+   */
+  private async broadcast(message: string | ArrayBuffer) {
+    for (const ws of this.ctx.getWebSockets()) {
+      ws.send(message);
+    }
   }
 }
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-    if (request.method === "GET" && request.url.endsWith("/websocket")) {
+    // オウム返しをするサンプル（`npx wscat -c ws://localhost:8787/ws`）
+    if (request.method === 'GET' && request.url.endsWith('/ws')) {
       const upgradeHeader = request.headers.get("Upgrade");
       if (!upgradeHeader || upgradeHeader !== "websocket") {
         return new Response(null, {
@@ -35,8 +48,8 @@ export default {
         });
       }
 
-      const id = env.MY_DURABLE_OBJECT.idFromName("foo");
-      const stub = env.MY_DURABLE_OBJECT.get(id);
+      const id = env.OUMU_GAESHI.idFromName("oumu_gaeshi");
+      const stub = env.OUMU_GAESHI.get(id);
 
       return stub.fetch(request);
     }
