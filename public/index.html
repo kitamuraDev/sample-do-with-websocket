@@ -53,7 +53,7 @@
       const message = document.getElementById("message");
       const input = document.getElementById("input");
 
-      let wsClient = new WebSocket("ws://localhost:8787/ws");
+      let wsClient = new WebSocket("/ws");
 
       wsClient.addEventListener("open", (event) => {
         console.log(event)
