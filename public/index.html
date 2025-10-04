@@ -49,11 +49,13 @@
       <input type="text" id="input" />
     </div>
 
-    <script>
+    <script type="module">
+      import ReconnectingWebSocket from 'https://esm.sh/reconnecting-websocket';
+
       const message = document.getElementById("message");
       const input = document.getElementById("input");
 
-      let wsClient = new WebSocket("/ws");
+      const wsClient = new ReconnectingWebSocket("/ws");
 
       wsClient.addEventListener("open", (event) => {
         console.log(event)

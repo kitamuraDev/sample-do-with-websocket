@@ -9,20 +9,11 @@
 	"compatibility_date": "2025-09-21",
 	"migrations": [
 		{
-			"tag": "v1",
+			"tag": "v2",
 			"new_sqlite_classes": [
 				"OumuGaeshi"
 			]
 		},
-		{
-			"tag": "v2",
-			"renamed_classes": [
-				{
-					"from": "MyDurableObject",
-					"to": "OumuGaeshi"
-				}
-			]
-		}
 	],
 	"assets": {
 		// The path to the directory containing the `index.html` file to be served at `/`
